@@ -7,12 +7,13 @@ const cf = testCoverageFile(root)
 const INERT = [/^docs\//, /^examples\//, /^media\//, /^\.github\//, /^integrations\//, /\.mdx?$/, /\.test-d\.tsx?$/]
 const strip = (d) => d.split(/^(?=diff --git )/m).filter((s) => { const m = /^diff --git a\/(\S+)/.exec(s); return !m || !INERT.some((r) => r.test(m[1])) }).join('')
 const tally = new Map()
-for (const sha of git('log', '--format=%H', '-60').trim().split('\n')) {
+let widened = 0
+for (const sha of git('log', '--format=%H', `-${Number(process.argv[2] ?? 60)}`, process.argv[3] ?? 'HEAD').trim().split('\n')) {
   const t = strip(git('diff', `${sha}^`, sha))
   if (!t.trim()) continue
   const n = await narrowByExecution(cf, t)
+  if (n.unread.length > 0) widened += 1
   for (const p of n.unread) tally.set(p, (tally.get(p) ?? 0) + 1)
 }
-console.log('unread paths, by how many commits they widened:')
-for (const [p, n] of [...tally].sort((a, b) => b[1] - a[1]).slice(0, 30)) console.log(`  ${String(n).padStart(2)}  ${p}`)
-console.log(`distinct ${tally.size}`)
+console.log(`${widened} commits widened; ${tally.size} distinct unread paths`)
+for (const [p, n] of [...tally].sort((a, b) => b[1] - a[1])) console.log(`  ${String(n).padStart(3)}  ${p}`)
