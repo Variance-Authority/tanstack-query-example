@@ -11,13 +11,16 @@
  * is left to Vitest.
  */
 import { execFileSync, spawnSync } from 'node:child_process'
-import { resolve } from 'node:path'
 
 const since = process.argv[2] ?? process.env.VARIANCE_SINCE
 
+// `--format vitest` is the same list written as `--exclude=` arguments, each
+// naming the file's place on disk — a workspace is many projects and a project
+// matches an exclude pattern against its own directory, not against the root
+// the record counts from.
 const skip = execFileSync(
   'variance',
-  ['select', '--format', 'plain', ...(since ? ['--since', since] : [])],
+  ['select', '--format', 'vitest', ...(since ? ['--since', since] : [])],
   { encoding: 'utf8' },
 )
   .split('\n')
@@ -27,17 +30,10 @@ const skip = execFileSync(
 // Excluded rather than listed, because the list has to stay open. A test file
 // written since the recording is one the record has never seen, and naming the
 // files to run would leave it out; naming the files to skip runs it.
-//
-// Absolute, because a workspace is many projects and a project matches an
-// exclude pattern against its own directory. `packages/query-core/src/x.test.ts`
-// is a path relative to the workspace and relative to nothing a project holds,
-// so it matches in none of them; the record speaks in workspace paths and this
-// is where they are turned back into places on disk.
-const args = skip.flatMap((file) => ['--exclude', resolve(process.cwd(), file)])
 console.log(
   skip.length === 0
     ? 'variance: nothing to skip, running the whole suite'
     : `variance: skipping ${skip.length} test file(s)`,
 )
 
-process.exit(spawnSync('vitest', ['run', ...args], { stdio: 'inherit' }).status ?? 1)
+process.exit(spawnSync('vitest', ['run', ...skip], { stdio: 'inherit' }).status ?? 1)
