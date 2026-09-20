@@ -11,6 +11,7 @@
  * is left to Vitest.
  */
 import { execFileSync, spawnSync } from 'node:child_process'
+import { resolve } from 'node:path'
 
 const since = process.argv[2] ?? process.env.VARIANCE_SINCE
 
@@ -26,7 +27,13 @@ const skip = execFileSync(
 // Excluded rather than listed, because the list has to stay open. A test file
 // written since the recording is one the record has never seen, and naming the
 // files to run would leave it out; naming the files to skip runs it.
-const args = skip.flatMap((file) => ['--exclude', file])
+//
+// Absolute, because a workspace is many projects and a project matches an
+// exclude pattern against its own directory. `packages/query-core/src/x.test.ts`
+// is a path relative to the workspace and relative to nothing a project holds,
+// so it matches in none of them; the record speaks in workspace paths and this
+// is where they are turned back into places on disk.
+const args = skip.flatMap((file) => ['--exclude', resolve(process.cwd(), file)])
 console.log(
   skip.length === 0
     ? 'variance: nothing to skip, running the whole suite'
