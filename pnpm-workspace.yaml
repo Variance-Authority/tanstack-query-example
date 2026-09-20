@@ -1,5 +1,9 @@
 cleanupUnusedCatalogs: true
 minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  # The tool this fork exists to demonstrate. Waiting a day for a release is a
+  # supply-chain posture; here it would only stop the demonstration installing.
+  - '@variance-authority/*'
 linkWorkspacePackages: true
 preferWorkspacePackages: true
 blockExoticSubdeps: true
@@ -69,3 +73,8 @@ allowBuilds:
 
   # nextJs
   sharp: false # not directly required for build
+  # @variance-authority/core — grammars for its source scan, which nothing
+  # here asks for. Test selection reads the record, not the parse.
+  tree-sitter-java: false
+  tree-sitter-python: false
+  tree-sitter-rust: false
