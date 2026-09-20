@@ -121,9 +121,9 @@ reproducible rather than remembered.
 **`scripts/test-changed.mjs`** is the dispatcher. It decides nothing:
 
 ```js
-const skip = execFileSync('variance', ['select', '--format', 'plain', ...])
+const skip = execFileSync('variance', ['select', '--format', 'vitest', ...])
   .split('\n').map((l) => l.trim()).filter(Boolean)
-const args = skip.flatMap((file) => ['--exclude', resolve(process.cwd(), file)])
+spawnSync('vitest', ['run', ...skip], { stdio: 'inherit' })
 ```
 
 `variance select` prints a skip list and nothing else. Every reason the record
