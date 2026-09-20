@@ -172,14 +172,9 @@ pnpm run test:lib          # records; ~13s
 pnpm run test:lib:changed  # selects
 ```
 
-`@variance-authority/sense` and `@variance-authority/cli` are currently linked
-into `node_modules` from a checkout of the tool rather than installed, because
-this repository found a defect on its way in: `vite-plugin-solid` hoists every
-JSX element into a `_tmpl$` above the function that returns it, so a region
-opening inside the template maps back to a *lower* original line than it closed
-on. Forty such inverted extents across three Solid files made the whole record
-unreadable. The fix is not in 0.2.0. Swap the links for a registry install once
-it is released.
+`@variance-authority/sense` and `@variance-authority/cli` are linked into
+`node_modules` from a checkout of the tool: this workspace needs two fixes that
+are not in 0.2.0. Swap the links for a registry install once they release.
 
 The record lands in `${XDG_CACHE_HOME:-~/.cache}/variance-authority/test-selection/`,
 keyed by the absolute path of this checkout. It is not part of git: nothing in
