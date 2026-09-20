@@ -49,3 +49,16 @@ temp
 
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# The seam writes its per-run shims here and clears them up after; a run that
+# was killed leaves them behind.
+.variance-authority/
+
+# Measurement scripts. The ones the write-up cites are tracked, so a figure in
+# it can be re-derived rather than believed; everything else here is scratch.
+.variance-scratch/*
+!.variance-scratch/migrate.mjs
+!.variance-scratch/peek.mjs
+!.variance-scratch/regions.mjs
+!.variance-scratch/replay.mjs
+!.variance-scratch/unread.mjs

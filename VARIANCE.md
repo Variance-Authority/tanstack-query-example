@@ -170,7 +170,16 @@ pnpm install
 pnpm run test:lib          # records; ~13s
 # edit something
 pnpm run test:lib:changed  # selects
+
+node .variance-scratch/peek.mjs     # 188 test files, 259 modules, 5,409 regions
+node .variance-scratch/regions.mjs  # the spread inside one module
+node .variance-scratch/replay.mjs 60 HEAD
+node .variance-scratch/unread.mjs 60 HEAD
 ```
+
+Those four are tracked so that every number here can be re-derived rather than
+believed. They are measurement: nothing in the suite runs them, and they are
+not part of the migration.
 
 `@variance-authority/sense` and `@variance-authority/cli` are linked into
 `node_modules` from a checkout of the tool: this workspace needs two fixes that
