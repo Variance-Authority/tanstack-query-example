@@ -10,7 +10,7 @@
  * So this script does not decide anything. It asks, subtracts, and hands what
  * is left to Vitest.
  */
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 
 const since = process.argv[2] ?? process.env.VARIANCE_SINCE
 
@@ -23,12 +23,14 @@ const skip = execFileSync(
   .map((line) => line.trim())
   .filter(Boolean)
 
-if (skip.length === 0) {
-  console.log('variance: nothing to skip, running the whole suite')
-  execFileSync('vitest', ['run'], { stdio: 'inherit' })
-} else {
-  console.log(`variance: skipping ${skip.length} test file(s)`)
-  execFileSync('vitest', ['run', ...skip.flatMap((file) => ['--exclude', file])], {
-    stdio: 'inherit',
-  })
-}
+// Excluded rather than listed, because the list has to stay open. A test file
+// written since the recording is one the record has never seen, and naming the
+// files to run would leave it out; naming the files to skip runs it.
+const args = skip.flatMap((file) => ['--exclude', file])
+console.log(
+  skip.length === 0
+    ? 'variance: nothing to skip, running the whole suite'
+    : `variance: skipping ${skip.length} test file(s)`,
+)
+
+process.exit(spawnSync('vitest', ['run', ...args], { stdio: 'inherit' }).status ?? 1)
