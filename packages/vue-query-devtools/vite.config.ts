@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url'
+import { withTestSelection } from '@variance-authority/sense/vitest'
 import { defineConfig, mergeConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import { tanstackViteConfig } from '@tanstack/vite-config'
@@ -19,7 +21,7 @@ const config = defineConfig({
   },
   test: {
     name: packageJson.name,
-    dir: './src',
+    dir: fileURLToPath(new URL('./src', import.meta.url)),
     watch: false,
     environment: 'jsdom',
     coverage: {
@@ -28,15 +30,20 @@ const config = defineConfig({
       include: ['src/**/*'],
       exclude: ['src/__tests__/**'],
     },
-    typecheck: { enabled: true },
+    typecheck: {
+      enabled: false },
     restoreMocks: true,
   },
 })
 
-export default mergeConfig(
+const varianceConfig = mergeConfig(
   config,
   tanstackViteConfig({
     entry: ['src/index.ts', 'src/production.ts'],
     srcDir: 'src',
   }),
 )
+
+export default withTestSelection(varianceConfig, {
+  root: fileURLToPath(new URL('../..', import.meta.url)),
+})

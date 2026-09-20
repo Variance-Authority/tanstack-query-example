@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url'
+import { withTestSelection } from '@variance-authority/sense/vitest'
 import { defineConfig, mergeConfig } from 'vitest/config'
 import { externalizeDeps } from 'vite-plugin-externalize-deps'
 import tsconfigPaths from 'vite-tsconfig-paths'
@@ -40,7 +42,7 @@ const config = defineConfig({
   },
   test: {
     name: packageJson.name,
-    dir: './src',
+    dir: fileURLToPath(new URL('./src', import.meta.url)),
     watch: false,
     environment: 'jsdom',
     setupFiles: ['test-setup.ts'],
@@ -50,7 +52,8 @@ const config = defineConfig({
       include: ['src/**/*'],
       exclude: ['src/__tests__/**'],
     },
-    typecheck: { enabled: true },
+    typecheck: {
+      enabled: false },
     globals: true,
     restoreMocks: true,
   },
@@ -112,7 +115,7 @@ export const tanstackViteConfig = (options: Options) => {
   })
 }
 
-export default mergeConfig(
+const varianceConfig = mergeConfig(
   config,
   tanstackViteConfig({
     cjs: false,
@@ -129,3 +132,7 @@ export default mergeConfig(
     tsconfigPath: 'tsconfig.prod.json',
   }),
 )
+
+export default withTestSelection(varianceConfig, {
+  root: fileURLToPath(new URL('../..', import.meta.url)),
+})

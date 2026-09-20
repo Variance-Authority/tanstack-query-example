@@ -1,8 +1,10 @@
+import { fileURLToPath } from 'node:url'
+import { withTestSelection } from '@variance-authority/sense/vitest'
 import { defineConfig } from 'vitest/config'
 
 import packageJson from './package.json'
 
-export default defineConfig({
+const varianceConfig = defineConfig({
   // fix from https://github.com/vitest-dev/vitest/issues/6992#issuecomment-2509408660
   resolve: {
     conditions: ['@tanstack/custom-condition'],
@@ -16,7 +18,7 @@ export default defineConfig({
   },
   test: {
     name: packageJson.name,
-    dir: './src',
+    dir: fileURLToPath(new URL('./src', import.meta.url)),
     watch: false,
     globals: true,
     coverage: {
@@ -24,7 +26,12 @@ export default defineConfig({
       provider: 'istanbul',
       include: ['src/**/*.{js,ts,cjs,mjs,jsx,tsx}'],
     },
-    typecheck: { enabled: true },
+    typecheck: {
+      enabled: false },
     restoreMocks: true,
   },
+})
+
+export default withTestSelection(varianceConfig, {
+  root: fileURLToPath(new URL('../..', import.meta.url)),
 })

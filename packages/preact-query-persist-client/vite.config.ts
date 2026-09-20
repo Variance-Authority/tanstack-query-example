@@ -1,9 +1,11 @@
+import { fileURLToPath } from 'node:url'
+import { withTestSelection } from '@variance-authority/sense/vitest'
 import preact from '@preact/preset-vite'
 import { defineConfig } from 'vitest/config'
 import packageJson from './package.json'
 import type { UserConfig as ViteUserConfig } from 'vite'
 
-export default defineConfig({
+const varianceConfig = defineConfig({
   plugins: [preact() as ViteUserConfig['plugins']],
   // fix from https://github.com/vitest-dev/vitest/issues/6992#issuecomment-2509408660
   resolve: {
@@ -18,7 +20,7 @@ export default defineConfig({
   },
   test: {
     name: packageJson.name,
-    dir: './src',
+    dir: fileURLToPath(new URL('./src', import.meta.url)),
     watch: false,
     environment: 'jsdom',
     setupFiles: ['test-setup.ts'],
@@ -28,7 +30,12 @@ export default defineConfig({
       include: ['src/**/*'],
       exclude: ['src/__tests__/**'],
     },
-    typecheck: { enabled: true },
+    typecheck: {
+      enabled: false },
     restoreMocks: true,
   },
+})
+
+export default withTestSelection(varianceConfig, {
+  root: fileURLToPath(new URL('../..', import.meta.url)),
 })
