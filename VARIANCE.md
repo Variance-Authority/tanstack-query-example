@@ -26,12 +26,13 @@ pnpm run test:lib:changed
 variance: skipping 178 test file(s)
  Test Files  1 failed | 9 passed (10)
       Tests  22 failed | 758 passed (780)
-   Duration  2.84s
+   Duration  2.82s
 ```
 
 Ten test files, in five packages: `query-core`, `react-query`, `preact-query`,
 `vue-query`, `query-devtools`. The whole suite, for comparison, is `pnpm run
-test:lib` — 188 files, 4523 tests, 11.6s of test time and 12.9s of wall clock.
+test:lib` — 188 files, 4,523 tests, 11.4s of test time and 12.7s of wall
+clock. The narrowed run is 2.8s, 4.4s of wall clock.
 
 A selector working from the project graph runs 168 of the 188, because 24 of
 this workspace's projects depend on `@tanstack/query-core` and their tests all
@@ -78,15 +79,24 @@ Always running everything is 11,280 test-file runs over those sixty commits.
 | | total | median | p90 |
 |---|---|---|---|
 | project graph | 10,207 | 168 (89%) | 188 (100%) |
-| record | 2,355 | 0 (0%) | 187 (99%) |
+| record as shipped | 11,220 | 187 (99%) | 187 (99%) |
+| record + declared inert | 2,355 | 0 (0%) | 187 (99%) |
 
-Thirty-one of the sixty commits touch only files that have not moved since the
+The third row is the second one with this repository's inert paths declared —
+prose, examples, CI, type tests. Without that declaration the record is worse
+than the graph, because a path no run ever read widens to everything. The
+declaration is the lever `select` is missing, and the gap between those two
+rows is what it is worth.
+
+Thirty of the sixty commits touch only files that have not moved since the
 recording, so their line numbers still mean what they meant. On those:
 
 | | total | median | p90 |
 |---|---|---|---|
-| project graph | 5,105 | 168 (89%) | 188 (100%) |
-| record | 502 | 0 (0%) | 15 (8%) |
+| project graph | 4,917 | 168 (89%) | 188 (100%) |
+| record + declared inert | 315 | 0 (0%) | 15 (8%) |
+
+Twenty-five of those thirty run nothing at all.
 
 Fourteen of the sixty change a package's own source — the commits where there is
 real work to skip and real risk in skipping it. The project graph runs 2,612
@@ -150,8 +160,10 @@ Three honest limits, all visible in the numbers above:
 
 - **Manifests and the lockfile widen the answer to everything.** Eight of the
   sixty commits run the whole suite, and the cause is always a file no run
-  enters: twenty-nine distinct such paths in the window, of which twenty-six are
-  a `package.json`, plus `pnpm-lock.yaml`, `nx.json` and `scripts/generate-docs.ts`.
+  enters: 38 distinct such paths in the window, of which 27 are a
+  `package.json` — 81 of the 96 sightings — plus `pnpm-lock.yaml`, `nx.json`,
+  `scripts/generate-docs.ts`, three lint and build configs, and three devtools
+  source files no test entered.
   The record cannot speak for a file it never saw executed, so it widens. That is
   the safe answer and it is not the useful one — a version bump in
   `packages/lit-query/package.json` is not a reason to run `query-core`'s tests.
@@ -159,7 +171,7 @@ Three honest limits, all visible in the numbers above:
   no recording can hold one. This repository already runs them as a separate
   target; a record-based selector has to be told that, rather than discovering it.
 - **Coordinates drift.** A commit is priceable against a record only while the
-  files it touched have stood still since the recording. Twenty-nine of the sixty
+  files it touched have stood still since the recording. Thirty of the sixty
   had moved on. In a repository this is not a concern — you record at the commit
   you are selecting from — but it is why the replay reports two tables.
 
@@ -167,23 +179,27 @@ Three honest limits, all visible in the numbers above:
 
 ```bash
 pnpm install
-pnpm run test:lib          # records; ~13s
+pnpm run test:lib          # records; ~13s wall
 # edit something
 pnpm run test:lib:changed  # selects
 
 node .variance-scratch/peek.mjs     # 188 test files, 259 modules, 5,409 regions
 node .variance-scratch/regions.mjs  # the spread inside one module
-node .variance-scratch/replay.mjs 60 HEAD
-node .variance-scratch/unread.mjs 60 HEAD
+node .variance-scratch/replay.mjs 60 c2231461^
+node .variance-scratch/unread.mjs 60 c2231461^
 ```
 
 Those four are tracked so that every number here can be re-derived rather than
 believed. They are measurement: nothing in the suite runs them, and they are
 not part of the migration.
 
-`@variance-authority/sense` and `@variance-authority/cli` are linked into
-`node_modules` from a checkout of the tool: this workspace needs two fixes that
-are not in 0.2.0. Swap the links for a registry install once they release.
+`@variance-authority/sense` and `@variance-authority/cli` are ordinary
+devDependencies at `^0.3.0`, installed from the registry like anything else
+here. Two of the fixes in 0.3.0 were found by recording this workspace: a test
+file that two projects both ran was written twice and destroyed the record, and
+`select --format vitest` printed exclusions no project could match.
+`pnpm-workspace.yaml` excludes `@variance-authority/*` from its release-age
+floor, so a clone installs a release published the same day.
 
 The record lands in `${XDG_CACHE_HOME:-~/.cache}/variance-authority/test-selection/`,
 keyed by the absolute path of this checkout. It is not part of git: nothing in
